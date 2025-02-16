@@ -1,24 +1,18 @@
+"""
+Title: Plot Utils  
+Description: Distributes style and exporting facilities across the application. 
+"""
 
-import pandas as pd
+# Standard Library Imports
 import logging
-import matplotlib.pyplot as plt
-# plot_utils.py
 
+# Third-Party Library Imports
+import pandas as pd
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
-# Configure logging (you may want to configure this elsewhere in your app)
+# Configure Logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-import logging
-import matplotlib.pyplot as plt
-
-# Configure logging (you may want to configure this elsewhere in your app)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-import matplotlib.pyplot as plt
-import logging
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def remove_borders(plot_func):
