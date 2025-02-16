@@ -1,27 +1,33 @@
+#
+# (0) All imports for genetic optimization
+#
 
-#
-# (0) all imports for genetic optimization
-#
-import time
-import random
-import pandas as pd
-import numpy as np
+# Standard library imports
+import datetime
 import json
-import os
 import logging
+import os
+import random
+import shutil
+import time
 from abc import ABC, abstractmethod
-from openpyxl.utils.dataframe import dataframe_to_rows
+
+# Third-party library imports
+import matplotlib.pyplot as plt
+import numpy as np
+import openpyxl
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import tensorflow
+from openpyxl import Workbook
 from openpyxl.styles import Border, Side
+from openpyxl.utils.dataframe import dataframe_to_rows
+
+# External utility modules
+from plot_utils import apply_plot_styling
 
 # Ensure necessary packages are installed
-import os
-
-try:
-    import matplotlib
-except ImportError:
-    os.system("pip install matplotlib")
-    import matplotlib
-
 try:
     import sklearn
 except ImportError:
@@ -34,11 +40,9 @@ except ImportError:
     os.system("pip install optree")
     import optree
 
-try:
-    import tensorflow
-except ImportError:
-    os.system("pip install tensorflow")
-    import tensorflow
+# Initialize logging configuration
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 #
 # (1) Abstract class for a Genetic Algo
@@ -62,6 +66,7 @@ class EvolutionaryAlgorithm(ABC):
         self.exceptionalism_rate = exceptionalism_rate
         self.population = self.initialize_population()
         self.fitness = []
+        self.num_generations=None
 
     @abstractmethod
     def initialize_population(self) -> list:
@@ -140,19 +145,8 @@ class EvolutionaryAlgorithm(ABC):
         pass
 
 #
-# (2) Core Genetic Optimiazation Algo
+# (2) Core Logic for Genetic Opti
 #
-import numpy as np
-import logging
-import json
-import random
-import time
-from abc import abstractmethod
-
-# Initialize the logging configuration
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 class VanillaModelConfOptimizer(EvolutionaryAlgorithm):
 
     def __init__(self, feasible_params, data_assembler=None, train_X=None, train_Y=None, test_X=None, test_Y=None, **kwargs):
@@ -352,6 +346,7 @@ class VanillaModelConfOptimizer(EvolutionaryAlgorithm):
         logger.debug("[DEBUG] Exceptional individuals recomputed.")
 
     def evolve(self, num_generations):
+        self.num_generations=num_generations
         # Set the total number of evaluations based on the population size and number of generations
         self.total_individuals_to_evaluate = self.population_size * num_generations
 
@@ -390,9 +385,8 @@ class VanillaModelConfOptimizer(EvolutionaryAlgorithm):
     def fit_predict(self, individual):
         pass
 
-import plotly.express as px
-from plot_utils import apply_plot_styling  
-
+#
+# (3) Diagnostic metrics
 #
 class MonitoredModelConfOptimizer(VanillaModelConfOptimizer):
     """
@@ -542,31 +536,26 @@ class MonitoredModelConfOptimizer(VanillaModelConfOptimizer):
                 print("Data assembler does not support plotting or is not available.")
 
 #
-import os
-import openpyxl
-from openpyxl import Workbook
-import datetime
-import plotly.io as pio
-import shutil
-from openpyxl.styles import Border, Side
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
+# (4) Exporting optimization output
 #
 class ServerModelConfOptimizer(MonitoredModelConfOptimizer):
+
     """
     It takes on from the plotting capabilities of UXModelConfOptimizer. It's built to save some reports to the home dir of a local server.
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.start_time = datetime.datetime.now()  # Initialize start time
         self.export_results_called = False  # Flag to track if export_results has been called
 
-        # Check if running in Colab environment
-        if 'COLAB_BASE_DIR' in globals():
-            # If Colab is mounted, use the Google Drive path
-            self.home_public_results_dir = os.path.join(COLAB_BASE_DIR, 'MyDrive', 'EA_forecast_optimization_results')
+        # Retrieve results folder from kwargs or use default
+        results_folder = kwargs.get('results_folder', None)
+
+        # If no results folder is provided, assume the home directory
+        if results_folder:
+            self.home_public_results_dir = results_folder
         else:
-            # Fallback to user's home directory for non-Colab environments
             self.home_public_results_dir = os.path.join(os.path.expanduser("~"), "EA_forecast_optimization_results")
 
         self.home_protected_results_dir = os.path.join(self.home_public_results_dir, "please_dont_open")
@@ -701,15 +690,23 @@ class ServerModelConfOptimizer(MonitoredModelConfOptimizer):
     #
     def _populate_optimization_parameters_sheet(self, workbook):
         sheet = workbook.create_sheet("Optimization Parameters")
+
+        # Add headers
+        sheet["A1"] = "Parameter"
+        sheet["B1"] = "Value"
+
+        # Define parameters
         params = {
             'Population Size': self.population_size,
-            'Number of Generations':self.current_generation,  # Assuming this attribute exists
+            'Number of Generations': self.num_generations,
             'Mutation Rate': self.mutation_rate,
             'Crossover Rate': self.crossover_rate,
             'Start Time': self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
             'Optimizer Class Name': self.__class__.__name__
         }
-        for i, (key, value) in enumerate(params.items(), start=1):
+
+        # Populate values, starting from row 2
+        for i, (key, value) in enumerate(params.items(), start=2):
             sheet[f'A{i}'] = key
             sheet[f'B{i}'] = value
     #
@@ -717,9 +714,16 @@ class ServerModelConfOptimizer(MonitoredModelConfOptimizer):
     #
     def _populate_search_space_sheet(self, workbook):
         sheet = workbook.create_sheet("Search Space")
-        for i, (param, range_values) in enumerate(self.feasible_space.items(), start=1):
+
+        # Add headers
+        sheet["A1"] = "Parameter"
+        sheet["B1"] = "Feasible Range"
+
+        # Populate values, starting from row 2
+        for i, (param, range_values) in enumerate(self.feasible_space.items(), start=2):
             sheet[f'A{i}'] = param
             sheet[f'B{i}'] = str(range_values)
+
     #
     # (3)
     #
@@ -729,13 +733,21 @@ class ServerModelConfOptimizer(MonitoredModelConfOptimizer):
         else:
             sheet = workbook["Best Solution"]
 
-        for i, (param, value) in enumerate(self.best_individual.items(), start=1):
+        # Add headers
+        sheet["A1"] = "Parameter"
+        sheet["B1"] = "Value"
+
+        # Populate the best individual parameters
+        for i, (param, value) in enumerate(self.best_individual.items(), start=2):  # Start from row 2
             sheet[f'A{i}'] = param
             sheet[f'B{i}'] = value
+
+        # Add additional details
         sheet[f'A{i+1}'] = 'Fitness'
         sheet[f'B{i+1}'] = self.max_fitness
         sheet[f'A{i+2}'] = 'Elapsed Time'
         sheet[f'B{i+2}'] = self._format_elapsed_time()
+
     #
     # (4)
     #
