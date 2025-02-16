@@ -1,3 +1,7 @@
+"""
+Title: Prepare Time Series Data
+Description: Provides a TimeSeriesDataHandler which prepares time series data (loaded from disk) for ML model development. It performs feature extraction using lags of the same series beyond a target forecast horizon. The handler outputs numpy arrays suitable for model development.
+"""
 #
 # (0) imports
 #
@@ -19,7 +23,7 @@ from sklearn.linear_model import LinearRegression
 from plot_utils import apply_plot_styling  # Importing from new mod
 
 #
-# (1) imports
+# (1) 
 #
 class TimeSeriesDataHandler:
 
@@ -66,7 +70,6 @@ class TimeSeriesDataHandler:
         self.baseline_model = None
         self.train_sample = None
         self.predictive_model = None
-
     #
     def _load_metadata(self):
         metadata_path = os.path.join(self.dataset_folder, 'metadata.json')
