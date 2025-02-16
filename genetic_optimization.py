@@ -1,3 +1,9 @@
+"""
+Title: Genetic Optimization
+Description: A custom implementation of a genetic optimization algorithm to find optimal hyperparameters for DL/ML models.
+image_path=ServerDNN*.html
+"""
+
 #
 # (0) All imports for genetic optimization
 #
