@@ -1,6 +1,6 @@
 """
-Title: Plot Utils  
-Description: Distributes style and exporting facilities across the application. 
+Title: Plot Utilities  
+Description: Provides styling and export functionalities for plots across the application. 
 """
 
 # Standard Library Imports
