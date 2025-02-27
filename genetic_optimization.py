@@ -153,9 +153,20 @@ class EvolutionaryAlgorithm(ABC):
 #
 # (2) Core Logic for Genetic Opti
 #
-class VanillaModelConfOptimizer(EvolutionaryAlgorithm):
+from prepare_ts_data import TimeSeriesDataHandler  
+from typing import Optional, Dict, Any  
 
-    def __init__(self, feasible_params, data_assembler=None, train_X=None, train_Y=None, test_X=None, test_Y=None, **kwargs):
+class VanillaModelConfOptimizer(EvolutionaryAlgorithm):  
+    def __init__(  
+        self,  
+        feasible_params: Dict[str, Any],  
+        data_assembler: Optional[TimeSeriesDataHandler] = None,  
+        train_X: Optional[np.ndarray] = None,  
+        train_Y: Optional[np.ndarray] = None,  
+        test_X: Optional[np.ndarray] = None,  
+        test_Y: Optional[np.ndarray] = None,  
+        **kwargs  
+    ):
         self.forecast_parameters = self._init_forecast_parameters(data_assembler)
         self.feasible_space = self._init_feasible_space(feasible_params)
         self.feasible_space_types = self._determine_param_types(self.feasible_space)
