@@ -1,3 +1,7 @@
+"""
+Title: Genetic Deep Learning 
+Description: Sets up a Deep Neural Network model as target predictive model for genetic optimization 
+"""
 
 #
 import numpy as np
