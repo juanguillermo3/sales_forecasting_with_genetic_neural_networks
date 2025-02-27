@@ -1,3 +1,7 @@
+"""
+Title: Plot Sales
+Description: Plots the hourly sales for the food delivery service
+"""
 
 import pandas as pd
 import matplotlib.pyplot as plt
